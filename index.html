@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARQUIVO VHS CORROMPIDO</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    color: #00ff88;
+    font-family: "Courier New", monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Tela VHS */
+#game {
+    width: 750px;
+    height: 420px;
+    background: #000;
+    border: 3px solid #00ff88;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Scanlines */
+#game::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        transparent,
+        rgba(255,255,255,0.05) 2px
+    );
+    pointer-events: none;
+}
+
+/* Glitch tela */
+.glitch {
+    animation: glitch 0.2s infinite;
+}
+
+@keyframes glitch {
+    0% { transform: translate(2px, 0); }
+    50% { transform: translate(-2px, 0); }
+    100% { transform: translate(0, 0); }
+}
+
+/* Texto */
+#texto {
+    white-space: pre-line;
+    min-height: 200px;
+}
+
+/* Botões */
+button {
+    display: block;
+    margin-top: 10px;
+    padding: 10px;
+    width: 100%;
+    background: #00ff88;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #00cc66;
+}
+
+/* Tela piscando */
+.flash {
+    animation: flash 0.1s;
+}
+
+@keyframes flash {
+    0% { background: white; }
+    100% { background: black; }
+}
+
+.info {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+    <div id="texto"></div>
+    <div id="opcoes"></div>
+    <div class="info">PLAY ► REC ◼ 1997</div>
+</div>
+
+<script>
+
+const historia = {
+    inicio: {
+        texto: "📼 Carregando fita...\n\nERRO: ARQUIVO CORROMPIDO\n\nDeseja forçar reprodução?",
+        opcoes: [
+            { texto: "▶ FORÇAR", proximo: "fita1" },
+            { texto: "❌ CANCELAR", proximo: "fim" }
+        ]
+    },
+
+    fita1: {
+        texto: "🌱 Imagem: plantação\n\n⚠ interferência detectada...\n\nAlgo está... se movendo no fundo.",
+        opcoes: [
+            { texto: "👁️ Olhar mais de perto", proximo: "olhar" },
+            { texto: "⏩ Avançar fita", proximo: "fita2" }
+        ]
+    },
+
+    olhar: {
+        texto: "👁️ Você pausou a fita.\n\nAlgo aparece entre os milhos.\n\nNão é humano.",
+        opcoes: [
+            { texto: "⚠ CONTINUAR", proximo: "fita2" }
+        ]
+    },
+
+    fita2: {
+        texto: "🚜 Trator ligado sozinho.\n\nÁudio distorcido:\n\n'Vo...cê...voltou...'",
+        opcoes: [
+            { texto: "📻 Aumentar volume", proximo: "mensagem" },
+            { texto: "⏹ Parar fita", proximo: "fim" }
+        ]
+    },
+
+    mensagem: {
+        texto: "📻 VOZ:\n\n'NÃO ERA PRA VOCÊ VER.'",
+        opcoes: [
+            { texto: "▶ Continuar", proximo: "final" }
+        ]
+    },
+
+    final: {
+        texto: "⚠ SINAL PERDIDO\n\n[ERRO]\n\nELE\nESTÁ\nFORA\nDA\nFITA",
+        opcoes: [
+            { texto: "🔁 Reiniciar", proximo: "inicio" }
+        ]
+    },
+
+    fim: {
+        texto: "❌ Reprodução encerrada.\n\n...\n\n(Algo continua rodando em segundo plano)",
+        opcoes: [
+            { texto: "🔁 Voltar", proximo: "inicio" }
+        ]
+    }
+};
+
+let atual = "inicio";
+
+/* Escrever texto simulando gravação */
+function escreverTexto(texto, elemento, velocidade = 30) {
+    elemento.innerText = "";
+    let i = 0;
+
+    const intervalo = setInterval(() => {
+        elemento.innerText += texto[i];
+        i++;
+
+        if (i >= texto.length) clearInterval(intervalo);
+
+        /* glitch aleatório */
+        if (Math.random() < 0.05) {
+            document.getElementById("game").classList.add("glitch");
+            setTimeout(() => {
+                document.getElementById("game").classList.remove("glitch");
+            }, 100);
+        }
+
+    }, velocidade);
+}
+
+/* Mostrar cena */
+function mostrarCena(cena) {
+    const dados = historia[cena];
+    const textoEl = document.getElementById("texto");
+    const opcoesEl = document.getElementById("opcoes");
+
+    escreverTexto(dados.texto, textoEl);
+
+    opcoesEl.innerHTML = "";
+
+    dados.opcoes.forEach(op => {
+        const btn = document.createElement("button");
+        btn.innerText = op.texto;
+
+        btn.onclick = () => {
+            efeitoFlash();
+            atual = op.proximo;
+            setTimeout(() => mostrarCena(atual), 200);
+        };
+
+        opcoesEl.appendChild(btn);
+    });
+
+    /* evento aleatório assustador */
+    if (Math.random() < 0.2) {
+        setTimeout(() => {
+            textoEl.innerText += "\n\n⚠ INTERFERÊNCIA...";
+        }, 1500);
+    }
+}
+
+/* efeito de piscada */
+function efeitoFlash() {
+    document.getElementById("game").classList.add("flash");
+    setTimeout(() => {
+        document.getElementById("game").classList.remove("flash");
+    }, 100);
+}
+
+/* inicia */
+mostrarCena(atual);
+
+</script>
+
+</body>
+</html>
